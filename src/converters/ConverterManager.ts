@@ -5,6 +5,7 @@ import { SizeTagConverter } from './SizeTagConverter';
 import { LinkTagConverter } from './LinkTagConverter';
 import { ImageTagConverter } from './ImageTagConverter';
 import { DefaultTagConverter } from './DefaultTagConverter';
+import { BrTagConverter } from './BrTagConverter';
 import { UnbreakConverter } from './UnbreakConverter';
 
 /**
@@ -76,6 +77,7 @@ export class ConverterManager {
     this.registerConverter(new SizeTagConverter());
     this.registerConverter(new LinkTagConverter());
     this.registerConverter(new ImageTagConverter());
+    this.registerConverter(new BrTagConverter());
     this.registerConverter(new UnbreakConverter());
   }
 }

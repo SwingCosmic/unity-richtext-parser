@@ -25,10 +25,16 @@ export class RichTextParser {
   private converterManager: ConverterManager;
 
   private dataContext: any;
-  private domParser: DOMParser;
+  private get domParser() {
+    return this.options.domParser!;
+  }
+
+  private options: ParseOptions;
   constructor(converterManager: ConverterManager, options: ParseOptions = {}) {
     this.converterManager = converterManager;
-    this.domParser = options.domParser || new DOMParser();
+
+    options.domParser ||= new DOMParser();
+    this.options = options;
   }
 
   /**
