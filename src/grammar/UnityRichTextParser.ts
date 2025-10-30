@@ -29,9 +29,10 @@ export default class UnityRichTextParser extends Parser {
 	public static readonly EQUALS = 8;
 	public static readonly STRING = 9;
 	public static readonly COLOR = 10;
-	public static readonly NUMBER = 11;
-	public static readonly Name = 12;
-	public static readonly S = 13;
+	public static readonly NUMBER_UNIT = 11;
+	public static readonly NUMBER = 12;
+	public static readonly Name = 13;
+	public static readonly S = 14;
 	public static override readonly EOF = Token.EOF;
 	public static readonly RULE_document = 0;
 	public static readonly RULE_content = 1;
@@ -51,6 +52,7 @@ export default class UnityRichTextParser extends Parser {
                                                              "SLASH_CLOSE", 
                                                              "SLASH", "EQUALS", 
                                                              "STRING", "COLOR", 
+                                                             "NUMBER_UNIT", 
                                                              "NUMBER", "Name", 
                                                              "S" ];
 	// tslint:disable:no-trailing-whitespace
@@ -227,7 +229,7 @@ export default class UnityRichTextParser extends Parser {
 				this.state = 43;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				while (_la===12) {
+				while (_la===13) {
 					{
 					{
 					this.state = 40;
@@ -289,7 +291,7 @@ export default class UnityRichTextParser extends Parser {
 				this.state = 69;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
-				while (_la===12) {
+				while (_la===13) {
 					{
 					{
 					this.state = 66;
@@ -375,7 +377,7 @@ export default class UnityRichTextParser extends Parser {
 			{
 			this.state = 85;
 			_la = this._input.LA(1);
-			if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 7168) !== 0))) {
+			if(!((((_la) & ~0x1F) === 0 && ((1 << _la) & 15872) !== 0))) {
 			this._errHandler.recoverInline(this);
 			}
 			else {
@@ -465,14 +467,14 @@ export default class UnityRichTextParser extends Parser {
 		return localctx;
 	}
 
-	public static readonly _serializedATN: number[] = [4,1,13,92,2,0,7,0,2,
+	public static readonly _serializedATN: number[] = [4,1,14,92,2,0,7,0,2,
 	1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,1,0,1,0,1,0,4,0,18,8,0,11,
 	0,12,0,19,1,0,1,0,1,1,3,1,25,8,1,1,1,1,1,3,1,29,8,1,1,1,3,1,32,8,1,5,1,
 	34,8,1,10,1,12,1,37,9,1,1,2,1,2,1,2,5,2,42,8,2,10,2,12,2,45,9,2,1,2,1,2,
 	1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,
 	1,2,5,2,68,8,2,10,2,12,2,71,9,2,1,2,1,2,1,2,1,2,1,2,1,2,1,2,3,2,80,8,2,
 	1,3,1,3,1,3,1,3,1,4,1,4,1,5,1,5,1,6,1,6,1,6,0,0,7,0,2,4,6,8,10,12,0,3,1,
-	0,10,12,2,0,2,2,4,4,1,0,1,2,96,0,17,1,0,0,0,2,24,1,0,0,0,4,79,1,0,0,0,6,
+	0,9,13,2,0,2,2,4,4,1,0,1,2,96,0,17,1,0,0,0,2,24,1,0,0,0,4,79,1,0,0,0,6,
 	81,1,0,0,0,8,85,1,0,0,0,10,87,1,0,0,0,12,89,1,0,0,0,14,18,3,12,6,0,15,18,
 	3,4,2,0,16,18,3,10,5,0,17,14,1,0,0,0,17,15,1,0,0,0,17,16,1,0,0,0,18,19,
 	1,0,0,0,19,17,1,0,0,0,19,20,1,0,0,0,20,21,1,0,0,0,21,22,5,0,0,1,22,1,1,
@@ -480,16 +482,16 @@ export default class UnityRichTextParser extends Parser {
 	4,2,0,27,29,5,1,0,0,28,26,1,0,0,0,28,27,1,0,0,0,29,31,1,0,0,0,30,32,3,10,
 	5,0,31,30,1,0,0,0,31,32,1,0,0,0,32,34,1,0,0,0,33,28,1,0,0,0,34,37,1,0,0,
 	0,35,33,1,0,0,0,35,36,1,0,0,0,36,3,1,0,0,0,37,35,1,0,0,0,38,39,5,3,0,0,
-	39,43,5,12,0,0,40,42,3,6,3,0,41,40,1,0,0,0,42,45,1,0,0,0,43,41,1,0,0,0,
+	39,43,5,13,0,0,40,42,3,6,3,0,41,40,1,0,0,0,42,45,1,0,0,0,43,41,1,0,0,0,
 	43,44,1,0,0,0,44,46,1,0,0,0,45,43,1,0,0,0,46,47,5,5,0,0,47,48,3,2,1,0,48,
-	49,5,3,0,0,49,50,5,7,0,0,50,51,5,12,0,0,51,52,5,5,0,0,52,80,1,0,0,0,53,
-	54,5,3,0,0,54,55,5,12,0,0,55,56,5,8,0,0,56,57,3,8,4,0,57,58,5,5,0,0,58,
-	59,3,2,1,0,59,60,5,3,0,0,60,61,5,7,0,0,61,62,5,12,0,0,62,63,5,5,0,0,63,
-	80,1,0,0,0,64,65,5,3,0,0,65,69,5,12,0,0,66,68,3,6,3,0,67,66,1,0,0,0,68,
+	49,5,3,0,0,49,50,5,7,0,0,50,51,5,13,0,0,51,52,5,5,0,0,52,80,1,0,0,0,53,
+	54,5,3,0,0,54,55,5,13,0,0,55,56,5,8,0,0,56,57,3,8,4,0,57,58,5,5,0,0,58,
+	59,3,2,1,0,59,60,5,3,0,0,60,61,5,7,0,0,61,62,5,13,0,0,62,63,5,5,0,0,63,
+	80,1,0,0,0,64,65,5,3,0,0,65,69,5,13,0,0,66,68,3,6,3,0,67,66,1,0,0,0,68,
 	71,1,0,0,0,69,67,1,0,0,0,69,70,1,0,0,0,70,72,1,0,0,0,71,69,1,0,0,0,72,80,
-	5,6,0,0,73,74,5,3,0,0,74,75,5,12,0,0,75,76,5,8,0,0,76,77,3,8,4,0,77,78,
+	5,6,0,0,73,74,5,3,0,0,74,75,5,13,0,0,75,76,5,8,0,0,76,77,3,8,4,0,77,78,
 	5,6,0,0,78,80,1,0,0,0,79,38,1,0,0,0,79,53,1,0,0,0,79,64,1,0,0,0,79,73,1,
-	0,0,0,80,5,1,0,0,0,81,82,5,12,0,0,82,83,5,8,0,0,83,84,3,8,4,0,84,7,1,0,
+	0,0,0,80,5,1,0,0,0,81,82,5,13,0,0,82,83,5,8,0,0,83,84,3,8,4,0,84,7,1,0,
 	0,0,85,86,7,0,0,0,86,9,1,0,0,0,87,88,7,1,0,0,88,11,1,0,0,0,89,90,7,2,0,
 	0,90,13,1,0,0,0,9,17,19,24,28,31,35,43,69,79];
 
@@ -847,8 +849,14 @@ export class AttributeValueContext extends ParserRuleContext {
 		super(parent, invokingState);
     	this.parser = parser;
 	}
+	public STRING(): TerminalNode {
+		return this.getToken(UnityRichTextParser.STRING, 0);
+	}
 	public COLOR(): TerminalNode {
 		return this.getToken(UnityRichTextParser.COLOR, 0);
+	}
+	public NUMBER_UNIT(): TerminalNode {
+		return this.getToken(UnityRichTextParser.NUMBER_UNIT, 0);
 	}
 	public NUMBER(): TerminalNode {
 		return this.getToken(UnityRichTextParser.NUMBER, 0);

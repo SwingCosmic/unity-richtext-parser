@@ -1,13 +1,13 @@
 /// <reference types="jest" />
 
 import UnityRichText from '../src';
-import { UnityRichTextSerializer } from '../src/UnityRichTextSerializer';
+import { UnityRichTextConverter } from '../src/UnityRichTextConverter';
 
 describe('UnityRichText', () => {
-  let parser: UnityRichTextSerializer;
+  let parser: UnityRichTextConverter;
 
   beforeEach(() => {
-    parser = new UnityRichTextSerializer();
+    parser = new UnityRichTextConverter();
   });
 
   describe('parseToHTML', () => {
@@ -39,19 +39,25 @@ describe('UnityRichText', () => {
     });
 
     it('应该解析颜色标签', () => {
-      const result = parser.parseToHTML('<color=#ff0000>Red Text</color>');
+      const result = parser.parseToHTML('<color=red>Red Text</color>');
       expect(result).toBe('<span style="color: #ff0000;">Red Text</span>');
     });
 
     it('应该解析大小标签', () => {
       const result = parser.parseToHTML('<size=20>Large Text</size>');
       expect(result).toBe('<span style="font-size: 20px;">Large Text</span>');
+
+      const result2 = parser.parseToHTML('<size=50%>Large Text</size>');
+      expect(result2).toBe('<span style="font-size: 50%;">Large Text</span>');
     });
 
-    // it('应该解析链接标签', () => {
-    //   const result = parser.parseToHTML('<a href="https://example.com">Link</a>');
-    //   expect(result).toBe('<a href="https://example.com">Link</a>');
-    // });
+    it('应该解析链接标签', () => {
+      const result = parser.parseToHTML('<link="https://example.com">Link</link>');
+      expect(result).toBe('<a href="https://example.com">Link</a>');
+
+      const result2 = parser.parseToHTML('<a href="https://example.com">Link</a>');
+      expect(result2).toBe('<a href="https://example.com">Link</a>');
+    });
 
     // it('应该解析图片标签', () => {
     //   const result = parser.parseToHTML('<img src="image.png" />');
@@ -82,14 +88,6 @@ describe('UnityRichText', () => {
       expect(result.textContent).toBe('Hello World');
     });
 
-    it('应该使用自定义DOM解析器', () => {
-      const customParser = new DOMParser();
-      const result = parser.parseToDOM('Hello World', {
-        domParser: customParser
-      });
-      expect(result).toBeInstanceOf(Element);
-    });
-
     it('应该解析富文本标签为DOM', () => {
       const result = parser.parseToDOM('<b>Bold</b> and <i>Italic</i>');
       expect(result.innerHTML).toBe('<b>Bold</b> and <i>Italic</i>');
@@ -98,7 +96,7 @@ describe('UnityRichText', () => {
 
   describe('default instance', () => {
     it('应该提供默认实例', () => {
-      expect(UnityRichText).toBeInstanceOf(UnityRichTextSerializer);
+      expect(UnityRichText).toBeInstanceOf(UnityRichTextConverter);
     });
 
     it('默认实例应该工作正常', () => {

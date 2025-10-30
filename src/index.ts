@@ -1,6 +1,6 @@
-import { UnityRichTextSerializer } from './UnityRichTextSerializer';
+import { UnityRichTextConverter } from './UnityRichTextConverter';
 
-export { UnityRichTextSerializer } from './UnityRichTextSerializer';
+export { UnityRichTextConverter } from './UnityRichTextConverter';
 export { TagConverter } from './converters/TagConverter';
 export { InlineTagConverter } from './converters/InlineTagConverter';
 export { ColorTagConverter } from './converters/ColorTagConverter';
@@ -13,5 +13,5 @@ export { InterpolationProcessor } from './utils/InterpolationProcessor';
 export * from './types';
 
 
-const UnityRichText = new UnityRichTextSerializer();
+const UnityRichText = new UnityRichTextConverter();
 export default UnityRichText;

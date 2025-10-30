@@ -21,9 +21,8 @@ export abstract class TagConverter implements ITagConverter {
    */
   protected setAttributes(element: Element, attributes: Record<string, string | number>): void {
     for (const [key, value] of Object.entries(attributes)) {
-      if (key.startsWith('on') || key === 'style') {
-        // 特殊属性处理
-        element.setAttribute(key, String(value));
+      if (key === 'style') {
+        this.setStyle(element, value as any);
       } else {
         // 普通属性
         element.setAttribute(key, String(value));
@@ -35,9 +34,13 @@ export abstract class TagConverter implements ITagConverter {
    * 设置元素样式
    */
   protected setStyle(element: Element, styles: Record<string, string>): void {
-    const styleString = Object.entries(styles)
-      .map(([prop, value]) => `${prop}: ${value};`)
-      .join(' ');
-    element.setAttribute('style', styleString);
+    // const styleString = Object.entries(styles)
+    //   .map(([prop, value]) => `${prop}: ${value};`)
+    //   .join(' ');
+    // element.setAttribute('style', styleString);
+    let style = (element as HTMLElement).style;
+    for (const [s, v] of Object.entries(styles)) {
+      style.setProperty(s, String(v));
+    }
   }
 }

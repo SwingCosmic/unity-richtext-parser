@@ -23,6 +23,7 @@ STRING        : '"' ~[<"]* '"' | '\'' ~[<']* '\'';
 
 
 COLOR         : '#' HEXDIGIT+;
+NUMBER_UNIT   : NUMBER (IDENTIFIER | '%');
 NUMBER        : '-'? DIGIT+ ('.' DIGIT+)?;
 
 Name          : NameStartChar NameChar*;
@@ -31,6 +32,7 @@ S             : [ \t\r\n] -> skip;
 
 
 fragment HEXDIGIT: [a-fA-F0-9];
+fragment IDENTIFIER: [a-zA-Z_][a-zA-Z0-9_]*;
 
 fragment DIGIT: [0-9];
 

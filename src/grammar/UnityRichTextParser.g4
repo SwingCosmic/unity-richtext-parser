@@ -27,7 +27,9 @@ attribute
     ; // Our STRING is AttValue in spec
 
 attributeValue
-    : COLOR
+    : STRING
+    | COLOR
+    | NUMBER_UNIT
     | NUMBER
     | Name 
     ;

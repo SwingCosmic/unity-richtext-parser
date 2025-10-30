@@ -16,14 +16,12 @@ export class LinkTagConverter extends TagConverter {
     if (href) {
       element.setAttribute('href', href);
     }
+    delete context.attributes.href;
+    delete context.attributes.link;
     
     // 设置其他属性
     this.setAttributes(element, context.attributes);
-    
-    // 如果有内容，设置文本内容
-    if (context.content) {
-      element.textContent = context.content;
-    }
+  
     
     return element;
   }
@@ -32,7 +30,7 @@ export class LinkTagConverter extends TagConverter {
    * 解析链接地址
    */
   private parseHref(attributes: Record<string, string | number>): string | null {
-    const hrefValue = attributes['href'] || attributes['url'] || attributes['value'];
+    const hrefValue = attributes['href'] || attributes['link'];
     if (!hrefValue) return null;
     
     const hrefStr = String(hrefValue).trim();
@@ -42,9 +40,9 @@ export class LinkTagConverter extends TagConverter {
       return hrefStr;
     }
     
-    // 如果没有协议，添加https://
+    // 如果没有协议，添加http://
     if (hrefStr.includes('.') && !hrefStr.startsWith('#')) {
-      return `https://${hrefStr}`;
+      return `http://${hrefStr}`;
     }
     
     return hrefStr;

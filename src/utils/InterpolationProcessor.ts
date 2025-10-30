@@ -32,10 +32,4 @@ export class InterpolationProcessor {
     }
   }
 
-  /**
-   * 检查文本是否包含插值表达式
-   */
-  static hasInterpolation(text: string): boolean {
-    return /<%=|<%|%>/.test(text);
-  }
 }

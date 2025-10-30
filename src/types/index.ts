@@ -1,13 +1,10 @@
+import { ContentContext } from "../grammar/UnityRichTextParser";
+
 export interface ParseOptions {
   /**
    * 是否启用插值表达式
    */
   enableInterpolation?: boolean;
-  
-  /**
-   * 插值表达式使用的数据对象
-   */
-  data?: Record<string, any>;
   
   /**
    * 自定义标签转换器
@@ -34,12 +31,16 @@ export interface TagContext {
   /**
    * 标签内容（对于非自闭合标签）
    */
-  content?: string;
+  content?: ContentContext;
   
   /**
    * 父级DOM元素
    */
   parentElement?: Element;
+
+  data?: any;
+
+  skipChildren?: boolean;
 }
 
 export interface TagConverter {

@@ -24,24 +24,28 @@ import { TagContext, ParseOptions } from "../types";
 export class RichTextParser {
   private converterManager: ConverterManager;
 
-  constructor(converterManager: ConverterManager) {
+  private dataContext: any;
+  private domParser: DOMParser;
+  constructor(converterManager: ConverterManager, options: ParseOptions = {}) {
     this.converterManager = converterManager;
+    this.domParser = options.domParser || new DOMParser();
   }
 
   /**
    * 解析富文本为DOM元素
    */
-  parse(richText: string, options: ParseOptions = {}): Element {
-    const { data, domParser = new DOMParser() } = options;
+  parse(richText: string, data?: any): Element {
+
+    this.dataContext = data;
 
     // 处理插值表达式
-    const processedText = InterpolationProcessor.process(richText, data);
+    // const processedText = InterpolationProcessor.process(richText, this.dataContext);
 
     // 创建根元素
-    const rootElement = this.createElement("div", domParser);
+    const rootElement = this.createElement("div");
 
     // 使用ANTLR4解析富文本
-    const documentFragment = this.parseWithANTLR(processedText, domParser);
+    const documentFragment = this.parseWithANTLR(richText);
 
     // 将解析结果添加到根元素
     while (documentFragment.firstChild) {
@@ -54,8 +58,8 @@ export class RichTextParser {
   /**
    * 使用ANTLR4解析富文本
    */
-  private parseWithANTLR(text: string, domParser: DOMParser): DocumentFragment {
-    const fragment = domParser
+  private parseWithANTLR(text: string): DocumentFragment {
+    const fragment = this.domParser
       .parseFromString("<div></div>", "text/html")
       .createDocumentFragment();
 
@@ -69,7 +73,7 @@ export class RichTextParser {
     const documentContext = parser.document();
 
     // 遍历解析树并构建DOM
-    this.buildDOMFromParseTree(documentContext, fragment, domParser);
+    this.buildDOMFromParseTree(documentContext, fragment);
 
     return fragment;
   }
@@ -80,12 +84,11 @@ export class RichTextParser {
   private buildDOMFromParseTree(
     context: DocumentContext,
     parentElement: Element | DocumentFragment,
-    domParser: DOMParser
   ): void {
     // 遍历文档中的所有节点
     const nodes = context.children!;
     for (let nodeContext of nodes) {
-      this.processNode(nodeContext, parentElement, domParser);
+      this.processNode(nodeContext, parentElement);
     }
   }
 
@@ -95,18 +98,17 @@ export class RichTextParser {
   private processNode(
     nodeContext: ParseTree,
     parentElement: Element | DocumentFragment,
-    domParser: DOMParser
   ): void {
     if (nodeContext instanceof ElementContext) {
       // 处理元素节点
-      this.processElement(nodeContext, parentElement, domParser);
+      this.processElement(nodeContext, parentElement);
     } else if (nodeContext instanceof ChardataContext) {
       // 处理文本节点
       this.processText(nodeContext, parentElement);
     } else if (nodeContext instanceof ContentContext) {
       // 处理内容节点（元素 or 文本）
       for (const content of nodeContext.children!) {
-        this.processNode(content, parentElement, domParser);
+        this.processNode(content, parentElement);
       }
     }
   }
@@ -117,18 +119,17 @@ export class RichTextParser {
   private processElement(
     elementContext: ElementContext,
     parentElement: Element | DocumentFragment,
-    domParser: DOMParser
   ): void {
     if (
       elementContext instanceof PairedElementContext ||
       elementContext instanceof PairedAbbrElementContext
     ) {
-      this.processPairedElement(elementContext, parentElement, domParser);
+      this.processPairedElement(elementContext, parentElement);
     } else if (
       elementContext instanceof SelfClosingElementContext ||
       elementContext instanceof SelfClosingAbbrElementContext
     ) {
-      this.processSelfClosingElement(elementContext, parentElement, domParser);
+      this.processSelfClosingElement(elementContext, parentElement);
     }
   }
 
@@ -138,26 +139,30 @@ export class RichTextParser {
   private processPairedElement(
     elementContext: PairedElementContext | PairedAbbrElementContext,
     parentElement: Element | DocumentFragment,
-    domParser: DOMParser
   ): void {
     const tagName = elementContext.Name(0).getText();
     const attributes = this.extractAttributes(elementContext);
+
+    const content: ContentContext = elementContext.content();
 
     // 创建标签上下文
     const tagContext: TagContext = {
       tagName,
       attributes,
+      data: this.dataContext,
+      content,
       parentElement:
         parentElement instanceof Element ? parentElement : undefined,
     };
 
     // 使用转换器转换标签
     const converter = this.converterManager.getConverter(tagName);
-    const element = converter.convert(tagContext, domParser);
+    const element = converter.convert(tagContext, this.domParser);
 
     // 处理子节点
-    const content = elementContext.content();
-    this.processNode(content, element, domParser);
+    if (!tagContext.skipChildren) {
+      this.processNode(content, element);
+    }
 
     parentElement.appendChild(element);
   }
@@ -168,7 +173,6 @@ export class RichTextParser {
   private processSelfClosingElement(
     elementContext: SelfClosingElementContext | SelfClosingAbbrElementContext,
     parentElement: Element | DocumentFragment,
-    domParser: DOMParser
   ): void {
     const tagName = elementContext.Name().getText();
     const attributes = this.extractAttributes(elementContext);
@@ -177,13 +181,14 @@ export class RichTextParser {
     const tagContext: TagContext = {
       tagName,
       attributes,
+      data: this.dataContext,
       parentElement:
         parentElement instanceof Element ? parentElement : undefined,
     };
 
     // 使用转换器转换标签
     const converter = this.converterManager.getConverter(tagName);
-    const element = converter.convert(tagContext, domParser);
+    const element = converter.convert(tagContext, this.domParser);
 
     parentElement.appendChild(element);
   }
@@ -276,8 +281,8 @@ export class RichTextParser {
   /**
    * 创建DOM元素
    */
-  private createElement(tagName: string, domParser: DOMParser): Element {
-    const doc = domParser.parseFromString(
+  private createElement(tagName: string): Element {
+    const doc = this.domParser.parseFromString(
       `<${tagName}></${tagName}>`,
       "text/html"
     );

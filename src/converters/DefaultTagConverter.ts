@@ -15,11 +15,6 @@ export class DefaultTagConverter extends TagConverter {
     // 设置所有属性
     this.setAttributes(element, context.attributes);
     
-    // 如果有内容，设置文本内容
-    if (context.content) {
-      element.textContent = context.content;
-    }
-    
     return element;
   }
   
