@@ -1,10 +1,11 @@
 import { ContentContext } from "../grammar/UnityRichTextParser";
+import interpolation, { InterpolationProcessor } from "../interpolation";
 
 export interface ParseOptions {
   /**
    * 是否启用插值表达式
    */
-  enableInterpolation?: boolean;
+  interpolationProcessor?: InterpolationProcessor;
   
   /**
    * 自定义标签转换器

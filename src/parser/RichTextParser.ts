@@ -13,8 +13,9 @@ import UnityRichTextParser, {
   SelfClosingElementContext,
 } from "../grammar/UnityRichTextParser";
 import { ConverterManager } from "../converters/ConverterManager";
-import { InterpolationProcessor } from "../utils/InterpolationProcessor";
+import interpolation, { InterpolationProcessor } from '../interpolation';
 import { TagContext, ParseOptions } from "../types";
+import { DefaultProcessor } from "../interpolation/DefaultProcessor";
 
 
 /**
@@ -30,11 +31,13 @@ export class RichTextParser {
   }
 
   private options: ParseOptions;
+  interpolation: InterpolationProcessor;
   constructor(converterManager: ConverterManager, options: ParseOptions = {}) {
     this.converterManager = converterManager;
 
     options.domParser ||= new DOMParser();
     this.options = options;
+    this.interpolation = options.interpolationProcessor || new DefaultProcessor();
   }
 
   /**
@@ -206,8 +209,9 @@ export class RichTextParser {
     textNodeContext: ChardataContext,
     parentElement: Element | DocumentFragment
   ): void {
-    const textContent = textNodeContext.getText();
-    if (textContent.trim()) {
+    let textContent = textNodeContext.getText().trim();
+    if (textContent) {
+      textContent = this.interpolation.process(textContent, this.dataContext);
       const textNode = this.createDecodedTextNode(textContent);
       parentElement.appendChild(textNode);
     }

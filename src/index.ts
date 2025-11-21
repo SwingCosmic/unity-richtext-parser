@@ -9,7 +9,7 @@ export { LinkTagConverter } from './converters/LinkTagConverter';
 export { ImageTagConverter } from './converters/ImageTagConverter';
 export { DefaultTagConverter } from './converters/DefaultTagConverter';
 export { ConverterManager } from './converters/ConverterManager';
-export { InterpolationProcessor } from './utils/InterpolationProcessor';
+export { default as DefaultProcessorProcessor, InterpolationProcessor } from './interpolation';
 export * from './types';
 
 

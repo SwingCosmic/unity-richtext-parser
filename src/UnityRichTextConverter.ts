@@ -1,6 +1,6 @@
 import { ConverterManager } from './converters/ConverterManager';
 import { RichTextParser } from './parser/RichTextParser';
-import { InterpolationProcessor } from './utils/InterpolationProcessor';
+import { InterpolationProcessor } from './interpolation';
 import { ParseOptions, TagConverter } from './types';
 
 /**
@@ -51,6 +51,15 @@ export class UnityRichTextConverter {
    */
   unregisterConverter(converter: TagConverter): void {
     this.converterManager.unregisterConverter(converter);
+  }
+
+  get interpolationProcessor() {
+    return this.richTextParser.interpolation;
+  }
+  set interpolationProcessor(processor: InterpolationProcessor | null) {
+    if (processor) {
+      this.richTextParser.interpolation = processor;
+    }
   }
 
 }
