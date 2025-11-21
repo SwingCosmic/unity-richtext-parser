@@ -13,7 +13,10 @@ export class DefaultTagConverter extends TagConverter {
     const element = this.createElement('span', domParser);
     
     // 设置所有属性
-    this.setAttributes(element, context.attributes);
+    this.setAttributes(element, {
+      ...context.attributes,
+      'data-tag-is': context.tagName,
+    });
     
     return element;
   }
