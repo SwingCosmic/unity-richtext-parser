@@ -19,9 +19,9 @@ export class DefaultProcessor {
     try {
       // 使用 lodash.template 处理插值表达式
       const compiled = template(text, {
-        interpolate: /<%=([\s\S]+?)%>/g, // 匹配 <%= expression %>
-        escape: /<%-([\s\S]+?)%>/g,      // 匹配 <%- expression %>
-        evaluate: /<%([\s\S]+?)%>/g      // 匹配 <% code %>
+        interpolate: /\$\{([\s\S]+?)\}/g, // 匹配 ${expression}
+        escape: undefined,
+        evaluate: undefined,   
       });
 
       return compiled(data);

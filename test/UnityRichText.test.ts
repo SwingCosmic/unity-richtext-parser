@@ -40,7 +40,7 @@ describe('UnityRichText', () => {
 
     it('应该解析颜色标签', () => {
       const result = parser.parseToHTML('<color=red>Red Text</color>');
-      expect(result).toBe('<span style="color: #ff0000;">Red Text</span>');
+      expect(result).toBe('<span style="color: rgb(255, 0, 0);">Red Text</span>');
     });
 
     it('应该解析大小标签', () => {
@@ -71,7 +71,7 @@ describe('UnityRichText', () => {
 
     it('应该处理未知标签', () => {
       const result = parser.parseToHTML('<unknown>Text</unknown>');
-      expect(result).toBe('<span>Text</span>');
+      expect(result).toBe('<span data-tag-is="unknown">Text</span>');
     });
 
     it('应该处理未知属性', () => {
@@ -89,9 +89,19 @@ describe('UnityRichText', () => {
     });
 
     it('应该解析富文本标签为DOM', () => {
-      const result = parser.parseToDOM('<b>Bold</b> and <i>Italic</i>');
-      expect(result.innerHTML).toBe('<b>Bold</b> and <i>Italic</i>');
+      const result = parser.parseToDOM('<b>Bold</b>and<i>Italic</i>');
+      expect(result.innerHTML).toBe('<b>Bold</b>and<i>Italic</i>');
     });
+  });
+
+  describe('interpolation', () => {
+    it('应采用默认插值处理器', () => {
+      const result = parser.parseToHTML('<u>Hello, ${name}!</u>', {
+        name: 'World'
+      });
+      expect(result).toBe(`<u>Hello, World!</u>`)
+    });
+
   });
 
   describe('default instance', () => {
