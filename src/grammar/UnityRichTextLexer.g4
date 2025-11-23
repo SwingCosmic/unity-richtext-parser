@@ -1,3 +1,5 @@
+// 参考antlr官方的html解析语法
+
 
 lexer grammar UnityRichTextLexer;
 

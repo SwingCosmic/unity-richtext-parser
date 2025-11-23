@@ -1,5 +1,5 @@
 {
-  "name": "unity-richtext-parser",
+  "name": "unity-richtext",
   "version": "1.0.0",
   "description": "Unity富文本标签解析器，支持转换为DOM或HTML字符串",
   "author": "",

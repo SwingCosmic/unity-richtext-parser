@@ -1,4 +1,4 @@
-# unity-richtext-parser
+# unity-richtext
 
 一个可扩展的Unity富文本解析器和DOM转换器
 
@@ -19,9 +19,9 @@
 ![预览示例](./doc/hsr.png)
 
 
-## 标签语法支持
+## 语法支持
 
-### 内建语法
+### 标签语法
 
 
 * `<br />` 简单自闭标签
@@ -29,10 +29,15 @@
 * `<a href="https://github.com">GitHub</a>` 带普通属性的标签，支持成对和自闭形式。属性值只包含字母数字时可以省略引号
 * `<color=#FF0000>red text</color>` 默认属性标签，支持成对和自闭形式
 
-### 扩展支持语法
+### 注释
 
-* `<tag="value" attr=value2></tag>` 带有默认属性和普通属性的混合标签
+* `<!-- comment -->` 注释标签
 
+### 文本内容
+
+* 除`<`外的任何字符均可作为文本内容
+* 支持HTML实体转义，可用`&lt;`代替`<`
+* 空白字符的解析行为取决于DOM API，通常情况下会压缩空格
 
 ### 注意事项
 
@@ -47,7 +52,7 @@
 
 ```typescript
 
-import UnityRichText from 'unity-richtext-parser';
+import UnityRichText from 'unity-richtext';
 
 const text = `<color=#FFFF00>Hello, ${name}!</color>`;
 UnityRichText.parseToHTML(desc, {
