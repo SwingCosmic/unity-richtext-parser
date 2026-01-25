@@ -211,9 +211,11 @@ export class RichTextParser {
   ): void {
     let textContent = textNodeContext.getText().trim();
     if (textContent) {
-      textContent = this.interpolation.process(textContent, this.dataContext);
-      const textNode = this.createDecodedTextNode(textContent);
-      parentElement.appendChild(textNode);
+      let content: string | Node = this.interpolation.process(textContent, this.dataContext);
+      if (typeof content === "string") {
+        content = this.createDecodedTextNode(content);
+      }
+      parentElement.appendChild(content);
     }
   }
 

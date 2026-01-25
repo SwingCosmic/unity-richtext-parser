@@ -2,7 +2,7 @@ import { DefaultProcessor } from "./DefaultProcessor";
 
 
 export interface InterpolationProcessor {
-  process(text: string, data?: Record<string, any>): string;
+  process(text: string, data?: Record<string, any>): string | HTMLElement;
 }
 
 
