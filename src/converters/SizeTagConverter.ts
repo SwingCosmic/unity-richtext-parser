@@ -19,6 +19,8 @@ export class SizeTagConverter extends TagConverter {
     delete context.attributes['size'];
     delete context.attributes['value'];
     
+    context.attributes['data-tag-is'] = context.tagName;
+    
     // 设置其他属性
     this.setAttributes(element, context.attributes);
     

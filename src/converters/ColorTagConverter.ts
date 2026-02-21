@@ -18,6 +18,7 @@ export class ColorTagConverter extends TagConverter {
     }
     delete context.attributes['color'];
     
+    context.attributes['data-tag-is'] = context.tagName;
     // 设置其他属性
     this.setAttributes(element, context.attributes);
     
