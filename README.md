@@ -14,10 +14,9 @@
 
 
 
-示例：采用了自定义标签解析器、自定义插值处理器并忽略未知标签的HTML渲染结果，数据内容来自游戏《崩坏：星穹铁道》
+示例：采用了自定义标签解析器、自定义插值处理器（Ruby和图标）并忽略未知标签的HTML渲染结果，数据内容来自游戏《崩坏：星穹铁道》
 
-![预览示例](./doc/hsr.png)
-
+![预览示例](https://github.com/user-attachments/assets/e92f581d-57ea-4521-9c59-a8d4e4190746)
 
 ## 语法支持
 
@@ -62,3 +61,10 @@ UnityRichText.parseToHTML(desc, {
 // <span style="color: #FFFF00;">Hello, World!</span>
 
 ```
+
+## 插值处理器
+
+您可以自定义插值处理器来应对各种字符串插值表达式。
+例如，使用lodash.template来将`${expr}`风格换成`<%= expr %>`。
+
+* 插值处理器支持返回HTML，但需要自行处理以防止XSS注入
