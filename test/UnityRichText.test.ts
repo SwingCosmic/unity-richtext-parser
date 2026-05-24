@@ -40,15 +40,18 @@ describe('UnityRichText', () => {
 
     it('应该解析颜色标签', () => {
       const result = parser.parseToHTML('<color=red>Red Text</color>');
-      expect(result).toBe('<span style="color: rgb(255, 0, 0);">Red Text</span>');
+      expect(result).toBe('<span style="color: rgb(255, 0, 0);" data-tag-is=\"color\">Red Text</span>');
     });
 
     it('应该解析大小标签', () => {
       const result = parser.parseToHTML('<size=20>Large Text</size>');
-      expect(result).toBe('<span style="font-size: 20px;">Large Text</span>');
+      expect(result).toBe('<span style="font-size: 20px;" data-tag-is=\"size\">Large Text</span>');
 
       const result2 = parser.parseToHTML('<size=50%>Large Text</size>');
-      expect(result2).toBe('<span style="font-size: 50%;">Large Text</span>');
+      expect(result2).toBe('<span style="font-size: 50%;" data-tag-is=\"size\">Large Text</span>');
+
+      const result3 = parser.parseToHTML('<size=+2>Larger Text</size>');
+      expect(result3).toBe('<span style="font-size: 18px;" data-tag-is=\"size\">Larger Text</span>');
     });
 
     it('应该解析链接标签', () => {

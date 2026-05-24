@@ -280,11 +280,14 @@ export class RichTextParser {
       return text;
     }
 
-    // 如果是数字，转换为数字类型
-    const numberValue = Number(text);
-    if (!isNaN(numberValue)) {
-      return numberValue;
-    }
+    // 部分情况下以+-开头的数字有特殊用途，需要保持原样
+    // 如<size=+2>text content</size>表示相对于基准值增加2px的字体大小
+    
+    // // 如果是数字，转换为数字类型
+    // const numberValue = Number(text);
+    // if (!isNaN(numberValue)) {
+    //   return numberValue;
+    // }
 
     // 否则返回原始文本
     return text;

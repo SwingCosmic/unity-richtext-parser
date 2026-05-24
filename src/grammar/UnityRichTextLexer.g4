@@ -26,7 +26,7 @@ STRING        : '"' ~[<"]* '"' | '\'' ~[<']* '\'';
 
 COLOR         : '#' HEXDIGIT+;
 NUMBER_UNIT   : NUMBER (IDENTIFIER | '%');
-NUMBER        : '-'? DIGIT+ ('.' DIGIT+)?;
+NUMBER        : [+-]? DIGIT+ ('.' DIGIT+)?;
 
 Name          : NameStartChar NameChar*;
 S             : [ \t\r\n] -> skip;

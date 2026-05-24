@@ -36,17 +36,18 @@ export class SizeTagConverter extends TagConverter {
     
     const sizeStr = String(sizeValue).trim();
     
-    // 如果是数字，添加px单位
-    if (/^\d+$/.test(sizeStr)) {
-      return `${sizeStr}px`;
-    }
+    const match = /^([+-])?(\d*\.?\d+)(px|em|rem|pt|%)?$/.exec(sizeStr);
+    if (!match) return null;
+
+    const sign = match[1] || '';
+    let number = parseFloat(match[2]);
+    const unit = match[3] || 'px';
     
-    // 如果已经有单位，直接返回
-    if (/(px|em|rem|pt|%)$/.test(sizeStr)) {
-      return sizeStr;
+    if (sign) {
+      let baseNumber = 16; // 默认基准值为16px
+      number = sign === '+' ? (baseNumber + number) : (baseNumber - number);
     }
-    
-    // 默认添加px单位
-    return `${sizeStr}px`;
+
+    return `${number}${unit}`;
   }
 }
