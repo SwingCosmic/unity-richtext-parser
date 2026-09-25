@@ -34,17 +34,15 @@
 
 ### 文本内容
 
-* 除`<`外的任何字符均可作为文本内容
+* 不构成完整标签的 `<` 按普通文本保留，例如 `a < b` 和颜文字
 * 支持HTML实体转义，可用`&lt;`代替`<`
-* 空白字符的解析行为取决于DOM API，通常情况下会压缩空格
+* 保留原始空白字符；浏览器中的显示方式由 CSS `white-space` 决定
 
 ### 注意事项
 
-* 所有标签必须闭合。
-  * 未闭合的自闭标签（如`<br>`）在Unity和HTML中是允许的，
-  但由于需要准备自闭标签白名单才能和成对标签区分，因此不支持
-  * 丢失结束标签的成对标签可能不会造成语法错误，但行为未定义。
-  在浏览器的DOM解析中，通常会导致标签内容应用到文档末尾
+* 默认将 `br`、`img`、`image` 的隐式自闭形式补为 `/>`。通过 `selfClosingTags` 指定完整白名单；已有自闭形式和明确成对的标签保持不变。
+* 未配对的标签头保留为可见文本，后续合法内容继续转换，不自动补结束标签。
+* `onDiagnostic` 可接收恢复性诊断，含 `stage`、`message` 和 UTF-16 `position`。位置对应当前阶段输入：插值阶段使用原文，标签解析阶段使用插值及白名单规范化后的文本。
 
 
 ## 快速开始
@@ -68,3 +66,30 @@ UnityRichText.parseToHTML(desc, {
 例如，使用lodash.template来将`${expr}`风格换成`<%= expr %>`。
 
 * 插值处理器支持返回HTML，但需要自行处理以防止XSS注入
+
+### 整段插值
+
+旧的 `process(text, data)` 在文本节点上执行，返回字符串时作为文本插入，返回 DOM 元素时直接插入。
+需要处理跨标签表达式时，可提供 `processSource(text, data, context)`：
+
+```typescript
+const converter = new UnityRichTextConverter({
+  interpolationProcessor: {
+    process: text => text,
+    processSource(text, data, context) {
+      // 在此调用业务自己的插值解析器，返回 Unity 富文本字符串。
+      // context.reportDiagnostic({ stage: 'interpolation', position: 0, message: '...' });
+      return text;
+    },
+  },
+  selfClosingTags: ['br', 'img', 'image', 'icon'],
+  onDiagnostic: diagnostic => console.warn(diagnostic),
+});
+```
+
+提供 `processSource` 时每次转换只执行一次，并跳过文本节点的 `process`。
+顺序为整段插值、白名单规范化、ANTLR 标签解析、配对校验和 DOM 转换。
+游戏插值语法由调用方维护，通用包不解释花括号。插入的普通变量应转义为文本，只有明确的结构表达式生成标签。
+`readUnityTag` 提供与 lexer 一致的标签头识别，业务解析器可用它跳过属性中的插值样式字符。
+
+`TagContext.content` 保留为 `ContentContext`，其中的子项为正文及独立标签头；标签配对由转换阶段负责，不再依赖 ANTLR 的嵌套元素恢复。

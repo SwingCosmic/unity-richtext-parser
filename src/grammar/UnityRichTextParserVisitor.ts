@@ -5,14 +5,14 @@ import {ParseTreeVisitor} from 'antlr4';
 
 import { DocumentContext } from "./UnityRichTextParser.js";
 import { ContentContext } from "./UnityRichTextParser.js";
-import { PairedElementContext } from "./UnityRichTextParser.js";
-import { PairedAbbrElementContext } from "./UnityRichTextParser.js";
+import { OpenElementContext } from "./UnityRichTextParser.js";
+import { OpenAbbrElementContext } from "./UnityRichTextParser.js";
+import { CloseElementContext } from "./UnityRichTextParser.js";
 import { SelfClosingElementContext } from "./UnityRichTextParser.js";
 import { SelfClosingAbbrElementContext } from "./UnityRichTextParser.js";
 import { AttributeContext } from "./UnityRichTextParser.js";
 import { AttributeValueContext } from "./UnityRichTextParser.js";
 import { ChardataContext } from "./UnityRichTextParser.js";
-import { MiscContext } from "./UnityRichTextParser.js";
 
 
 /**
@@ -36,19 +36,26 @@ export default class UnityRichTextParserVisitor<Result> extends ParseTreeVisitor
 	 */
 	visitContent?: (ctx: ContentContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `PairedElement`
+	 * Visit a parse tree produced by the `OpenElement`
 	 * labeled alternative in `UnityRichTextParser.element`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitPairedElement?: (ctx: PairedElementContext) => Result;
+	visitOpenElement?: (ctx: OpenElementContext) => Result;
 	/**
-	 * Visit a parse tree produced by the `PairedAbbrElement`
+	 * Visit a parse tree produced by the `OpenAbbrElement`
 	 * labeled alternative in `UnityRichTextParser.element`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	visitPairedAbbrElement?: (ctx: PairedAbbrElementContext) => Result;
+	visitOpenAbbrElement?: (ctx: OpenAbbrElementContext) => Result;
+	/**
+	 * Visit a parse tree produced by the `CloseElement`
+	 * labeled alternative in `UnityRichTextParser.element`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitCloseElement?: (ctx: CloseElementContext) => Result;
 	/**
 	 * Visit a parse tree produced by the `SelfClosingElement`
 	 * labeled alternative in `UnityRichTextParser.element`.
@@ -81,11 +88,5 @@ export default class UnityRichTextParserVisitor<Result> extends ParseTreeVisitor
 	 * @return the visitor result
 	 */
 	visitChardata?: (ctx: ChardataContext) => Result;
-	/**
-	 * Visit a parse tree produced by `UnityRichTextParser.misc`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitMisc?: (ctx: MiscContext) => Result;
 }
 

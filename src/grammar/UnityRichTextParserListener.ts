@@ -5,14 +5,14 @@ import {ParseTreeListener} from "antlr4";
 
 import { DocumentContext } from "./UnityRichTextParser.js";
 import { ContentContext } from "./UnityRichTextParser.js";
-import { PairedElementContext } from "./UnityRichTextParser.js";
-import { PairedAbbrElementContext } from "./UnityRichTextParser.js";
+import { OpenElementContext } from "./UnityRichTextParser.js";
+import { OpenAbbrElementContext } from "./UnityRichTextParser.js";
+import { CloseElementContext } from "./UnityRichTextParser.js";
 import { SelfClosingElementContext } from "./UnityRichTextParser.js";
 import { SelfClosingAbbrElementContext } from "./UnityRichTextParser.js";
 import { AttributeContext } from "./UnityRichTextParser.js";
 import { AttributeValueContext } from "./UnityRichTextParser.js";
 import { ChardataContext } from "./UnityRichTextParser.js";
-import { MiscContext } from "./UnityRichTextParser.js";
 
 
 /**
@@ -41,29 +41,41 @@ export default class UnityRichTextParserListener extends ParseTreeListener {
 	 */
 	exitContent?: (ctx: ContentContext) => void;
 	/**
-	 * Enter a parse tree produced by the `PairedElement`
+	 * Enter a parse tree produced by the `OpenElement`
 	 * labeled alternative in `UnityRichTextParser.element`.
 	 * @param ctx the parse tree
 	 */
-	enterPairedElement?: (ctx: PairedElementContext) => void;
+	enterOpenElement?: (ctx: OpenElementContext) => void;
 	/**
-	 * Exit a parse tree produced by the `PairedElement`
+	 * Exit a parse tree produced by the `OpenElement`
 	 * labeled alternative in `UnityRichTextParser.element`.
 	 * @param ctx the parse tree
 	 */
-	exitPairedElement?: (ctx: PairedElementContext) => void;
+	exitOpenElement?: (ctx: OpenElementContext) => void;
 	/**
-	 * Enter a parse tree produced by the `PairedAbbrElement`
+	 * Enter a parse tree produced by the `OpenAbbrElement`
 	 * labeled alternative in `UnityRichTextParser.element`.
 	 * @param ctx the parse tree
 	 */
-	enterPairedAbbrElement?: (ctx: PairedAbbrElementContext) => void;
+	enterOpenAbbrElement?: (ctx: OpenAbbrElementContext) => void;
 	/**
-	 * Exit a parse tree produced by the `PairedAbbrElement`
+	 * Exit a parse tree produced by the `OpenAbbrElement`
 	 * labeled alternative in `UnityRichTextParser.element`.
 	 * @param ctx the parse tree
 	 */
-	exitPairedAbbrElement?: (ctx: PairedAbbrElementContext) => void;
+	exitOpenAbbrElement?: (ctx: OpenAbbrElementContext) => void;
+	/**
+	 * Enter a parse tree produced by the `CloseElement`
+	 * labeled alternative in `UnityRichTextParser.element`.
+	 * @param ctx the parse tree
+	 */
+	enterCloseElement?: (ctx: CloseElementContext) => void;
+	/**
+	 * Exit a parse tree produced by the `CloseElement`
+	 * labeled alternative in `UnityRichTextParser.element`.
+	 * @param ctx the parse tree
+	 */
+	exitCloseElement?: (ctx: CloseElementContext) => void;
 	/**
 	 * Enter a parse tree produced by the `SelfClosingElement`
 	 * labeled alternative in `UnityRichTextParser.element`.
@@ -118,15 +130,5 @@ export default class UnityRichTextParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitChardata?: (ctx: ChardataContext) => void;
-	/**
-	 * Enter a parse tree produced by `UnityRichTextParser.misc`.
-	 * @param ctx the parse tree
-	 */
-	enterMisc?: (ctx: MiscContext) => void;
-	/**
-	 * Exit a parse tree produced by `UnityRichTextParser.misc`.
-	 * @param ctx the parse tree
-	 */
-	exitMisc?: (ctx: MiscContext) => void;
 }
 

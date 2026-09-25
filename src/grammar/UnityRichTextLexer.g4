@@ -3,14 +3,25 @@
 
 lexer grammar UnityRichTextLexer;
 
+@header {
+import { readUnityTag } from "../parser/tagSyntax";
+}
+
+@members {
+    private sourceText: string | undefined;
+    private isTagStart(): boolean {
+        this.sourceText ??= this._input.toString();
+        return readUnityTag(this.sourceText, this._input.index) !== undefined;
+    }
+}
+
 // Default "mode": Everything OUTSIDE of a tag
 COMMENT : '<!--' .*? '-->';
 
 // EntityRef : '&' Name ';';
 // CharRef   : '&#' DIGIT+ ';' | '&#x' HEXDIGIT+ ';';
-SEA_WS    : (' ' | '\t' | '\r'? '\n')+;
-
-OPEN         : '<'       -> pushMode(INSIDE);
+OPEN         : {this.isTagStart()}? '<' -> pushMode(INSIDE);
+LITERAL_LT   : '<';
 
 TEXT: ~[<]+; // match any 16 bit char other than < and &
 
@@ -21,7 +32,7 @@ CLOSE         : '>'  -> popMode;
 SLASH_CLOSE   : '/>' -> popMode;
 SLASH         : '/';
 EQUALS        : '=';
-STRING        : '"' ~[<"]* '"' | '\'' ~[<']* '\'';
+STRING        : '"' ~["]* '"' | '\'' ~[']* '\'';
 
 
 COLOR         : '#' HEXDIGIT+;

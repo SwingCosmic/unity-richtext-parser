@@ -1,48 +1,18 @@
-
 parser grammar UnityRichTextParser;
 
-options {
-    tokenVocab = UnityRichTextLexer;
-}
+options { tokenVocab = UnityRichTextLexer; }
 
-document
-    : (misc | element | chardata)+  EOF
-    ;
+document : content EOF;
+content : (element | chardata | COMMENT)*;
 
-
-content
-    : chardata? ((element  | COMMENT) chardata?)*
-    ;
-
+// Pair complete headers in the DOM builder, without ANTLR inserting end tags.
 element
-    : '<' Name attribute* '>' content '<' '/' Name '>'         # PairedElement
-    | '<' Name '=' attributeValue '>' content '<' '/' Name '>' # PairedAbbrElement
-    | '<' Name attribute* '/>'                                 # SelfClosingElement
-    | '<' Name '=' attributeValue '/>'                         # SelfClosingAbbrElement
+    : OPEN Name attribute* CLOSE                  # OpenElement
+    | OPEN Name EQUALS attributeValue CLOSE       # OpenAbbrElement
+    | OPEN SLASH Name CLOSE                       # CloseElement
+    | OPEN Name attribute* SLASH_CLOSE            # SelfClosingElement
+    | OPEN Name EQUALS attributeValue SLASH_CLOSE  # SelfClosingAbbrElement
     ;
-
-
-attribute
-    : Name '=' attributeValue
-    ; // Our STRING is AttValue in spec
-
-attributeValue
-    : STRING
-    | COLOR
-    | NUMBER_UNIT
-    | NUMBER
-    | Name 
-    ;
-
-/** ``All text that is not markup constitutes the character data of
- *  the document.''
- */
-chardata
-    : TEXT
-    | SEA_WS
-    ;
-
-misc
-    : COMMENT
-    | SEA_WS
-    ;
+attribute : Name EQUALS attributeValue;
+attributeValue : STRING | COLOR | NUMBER_UNIT | NUMBER | Name;
+chardata : (TEXT | LITERAL_LT)+;

@@ -11,6 +11,9 @@ export { DefaultTagConverter } from './converters/DefaultTagConverter';
 export { ConverterManager } from './converters/ConverterManager';
 export { default as DefaultProcessorProcessor, InterpolationProcessor } from './interpolation';
 export * from './types';
+export type { SourceProcessingContext } from './interpolation';
+export { readUnityTag, normalizeSelfClosingTags, DEFAULT_SELF_CLOSING_TAGS } from './parser/tagSyntax';
+export type { UnityTagHeader } from './parser/tagSyntax';
 
 
 const UnityRichText = new UnityRichTextConverter();

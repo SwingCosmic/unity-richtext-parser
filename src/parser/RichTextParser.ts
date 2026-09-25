@@ -1,313 +1,140 @@
-import { CharStreams, CommonTokenStream, ParseTree } from "antlr4";
+import { CharStream, CommonTokenStream, ErrorListener, ParseTree, Token } from "antlr4";
 import UnityRichTextLexer from "../grammar/UnityRichTextLexer";
 import UnityRichTextParser, {
-  AttributeContext,
-  AttributeValueContext,
-  ChardataContext,
-  ContentContext,
-  DocumentContext,
-  ElementContext,
-  PairedAbbrElementContext,
-  PairedElementContext,
-  SelfClosingAbbrElementContext,
-  SelfClosingElementContext,
+  AttributeValueContext, ChardataContext, CloseElementContext, ContentContext,
+  ElementContext, OpenAbbrElementContext, OpenElementContext,
+  SelfClosingAbbrElementContext, SelfClosingElementContext,
 } from "../grammar/UnityRichTextParser";
 import { ConverterManager } from "../converters/ConverterManager";
-import interpolation, { InterpolationProcessor } from '../interpolation';
-import { TagContext, ParseOptions } from "../types";
+import { InterpolationProcessor } from "../interpolation";
+import { ParseDiagnostic, ParseOptions, TagContext } from "../types";
 import { DefaultProcessor } from "../interpolation/DefaultProcessor";
+import { DEFAULT_SELF_CLOSING_TAGS, normalizeSelfClosingTags } from "./tagSyntax";
 
+type Header = OpenElementContext | OpenAbbrElementContext |
+  SelfClosingElementContext | SelfClosingAbbrElementContext;
 
-/**
- * 富文本解析器
- * 负责使用ANTLR4解析Unity富文本并转换为DOM
- */
+/** ANTLR reads lossless headers/text; pairing never inserts or deletes source. */
 export class RichTextParser {
-  private converterManager: ConverterManager;
-
-  private dataContext: any;
-  private get domParser() {
-    return this.options.domParser!;
-  }
-
-  private options: ParseOptions;
   interpolation: InterpolationProcessor;
-  constructor(converterManager: ConverterManager, options: ParseOptions = {}) {
-    this.converterManager = converterManager;
+  private readonly domParser: DOMParser;
 
-    options.domParser ||= new DOMParser();
-    this.options = options;
-    this.interpolation = options.interpolationProcessor || new DefaultProcessor();
+  constructor(private converterManager: ConverterManager, private options: ParseOptions = {}) {
+    this.domParser = options.domParser ?? new DOMParser();
+    this.interpolation = options.interpolationProcessor ?? new DefaultProcessor();
   }
 
-  /**
-   * 解析富文本为DOM元素
-   */
   parse(richText: string, data?: any): Element {
+    const doc = this.domParser.parseFromString("<div></div>", "text/html");
+    const root = doc.body.firstElementChild!;
+    const processor = this.interpolation;
+    const report = (diagnostic: ParseDiagnostic) => this.options.onDiagnostic?.(diagnostic);
+    const source = processor.processSource
+      ? processor.processSource(richText, data, { reportDiagnostic: report })
+      : richText;
+    const text = normalizeSelfClosingTags(source, this.options.selfClosingTags ?? DEFAULT_SELF_CLOSING_TAGS);
+    // UTF-16 offsets agree with the shared tag scanner and JS string slicing.
+    const lexer = new UnityRichTextLexer(new CharStream(text, false));
+    const parser = new UnityRichTextParser(new CommonTokenStream(lexer));
+    lexer.removeErrorListeners();
+    parser.removeErrorListeners();
+    const lexical = new ErrorListener<number>();
+    lexical.syntaxError = (_recognizer, _symbol, _line, _column, message) =>
+      report({ stage: "lexer", message, position: lexer._tokenStartCharIndex });
+    const syntactic = new ErrorListener<Token>();
+    syntactic.syntaxError = (_recognizer, token, _line, _column, message) =>
+      report({ stage: "parser", message, position: token?.start ?? text.length });
+    lexer.addErrorListener(lexical);
+    parser.addErrorListener(syntactic);
+    const nodes = parser.document().content().children ?? [];
+    const pairs = this.pairHeaders(nodes, report);
 
-    this.dataContext = data;
-
-    // 处理插值表达式
-    // const processedText = InterpolationProcessor.process(richText, this.dataContext);
-
-    // 创建根元素
-    const rootElement = this.createElement("div");
-
-    // 使用ANTLR4解析富文本
-    const documentFragment = this.parseWithANTLR(richText);
-
-    // 将解析结果添加到根元素
-    while (documentFragment.firstChild) {
-      rootElement.appendChild(documentFragment.firstChild);
-    }
-
-    return rootElement;
-  }
-
-  /**
-   * 使用ANTLR4解析富文本
-   */
-  private parseWithANTLR(text: string): DocumentFragment {
-    const fragment = this.domParser
-      .parseFromString("<div></div>", "text/html")
-      .createDocumentFragment();
-
-    // 创建ANTLR词法分析器和语法分析器
-    const inputStream = CharStreams.fromString(text);
-    const lexer = new UnityRichTextLexer(inputStream);
-    const tokenStream = new CommonTokenStream(lexer);
-    const parser = new UnityRichTextParser(tokenStream);
-
-    // 解析文档
-    const documentContext = parser.document();
-
-    // 遍历解析树并构建DOM
-    this.buildDOMFromParseTree(documentContext, fragment);
-
-    return fragment;
-  }
-
-  /**
-   * 从解析树构建DOM
-   */
-  private buildDOMFromParseTree(
-    context: DocumentContext,
-    parentElement: Element | DocumentFragment,
-  ): void {
-    // 遍历文档中的所有节点
-    const nodes = context.children!;
-    for (let nodeContext of nodes) {
-      this.processNode(nodeContext, parentElement);
-    }
-  }
-
-  /**
-   * 处理节点
-   */
-  private processNode(
-    nodeContext: ParseTree,
-    parentElement: Element | DocumentFragment,
-  ): void {
-    if (nodeContext instanceof ElementContext) {
-      // 处理元素节点
-      this.processElement(nodeContext, parentElement);
-    } else if (nodeContext instanceof ChardataContext) {
-      // 处理文本节点
-      this.processText(nodeContext, parentElement);
-    } else if (nodeContext instanceof ContentContext) {
-      // 处理内容节点（元素 or 文本）
-      for (const content of nodeContext.children!) {
-        this.processNode(content, parentElement);
-      }
-    }
-  }
-
-  /**
-   * 处理元素节点
-   */
-  private processElement(
-    elementContext: ElementContext,
-    parentElement: Element | DocumentFragment,
-  ): void {
-    if (
-      elementContext instanceof PairedElementContext ||
-      elementContext instanceof PairedAbbrElementContext
-    ) {
-      this.processPairedElement(elementContext, parentElement);
-    } else if (
-      elementContext instanceof SelfClosingElementContext ||
-      elementContext instanceof SelfClosingAbbrElementContext
-    ) {
-      this.processSelfClosingElement(elementContext, parentElement);
-    }
-  }
-
-  /**
-   * 处理成对元素（有开始和结束标签）
-   */
-  private processPairedElement(
-    elementContext: PairedElementContext | PairedAbbrElementContext,
-    parentElement: Element | DocumentFragment,
-  ): void {
-    const tagName = elementContext.Name(0).getText();
-    const attributes = this.extractAttributes(elementContext);
-
-    const content: ContentContext = elementContext.content();
-
-    // 创建标签上下文
-    const tagContext: TagContext = {
-      tagName,
-      attributes,
-      data: this.dataContext,
-      content,
-      parentElement:
-        parentElement instanceof Element ? parentElement : undefined,
-    };
-
-    // 使用转换器转换标签
-    const converter = this.converterManager.getConverter(tagName);
-    const element = converter.convert(tagContext, this.domParser);
-
-    // 处理子节点
-    if (!tagContext.skipChildren) {
-      this.processNode(content, element);
-    }
-
-    parentElement.appendChild(element);
-  }
-
-  /**
-   * 处理自闭合元素
-   */
-  private processSelfClosingElement(
-    elementContext: SelfClosingElementContext | SelfClosingAbbrElementContext,
-    parentElement: Element | DocumentFragment,
-  ): void {
-    const tagName = elementContext.Name().getText();
-    const attributes = this.extractAttributes(elementContext);
-
-    // 创建标签上下文
-    const tagContext: TagContext = {
-      tagName,
-      attributes,
-      data: this.dataContext,
-      parentElement:
-        parentElement instanceof Element ? parentElement : undefined,
-    };
-
-    // 使用转换器转换标签
-    const converter = this.converterManager.getConverter(tagName);
-    const element = converter.convert(tagContext, this.domParser);
-
-    parentElement.appendChild(element);
-  }
-
-  /**
-   * 处理文本节点
-   */
-  private processText(
-    textNodeContext: ChardataContext,
-    parentElement: Element | DocumentFragment
-  ): void {
-    let textContent = textNodeContext.getText().trim();
-    if (textContent) {
-      let content: string | Node = this.interpolation.process(textContent, this.dataContext);
-      if (typeof content === "string") {
-        content = this.createDecodedTextNode(content);
-      }
-      parentElement.appendChild(content);
-    }
-  }
-
-  /**
-   * 提取元素属性
-   */
-  private extractAttributes(
-    elementContext: ElementContext
-  ): Record<string, string | number> {
-    const attributes: Record<string, string | number> = {};
-
-    if (
-      elementContext instanceof PairedElementContext ||
-      elementContext instanceof SelfClosingElementContext
-    ) {
-      let attrContexts = elementContext.attribute_list();
-      for (const attrContext of attrContexts) {
-        const name = attrContext.Name().getText();
-        const value = this.extractAttributeValue(attrContext.attributeValue());
-
-        if (name) {
-          attributes[name] = value;
+    const render = (start: number, end: number, parent: Element) => {
+      for (let i = start; i < end; i++) {
+        const node = nodes[i];
+        if (node instanceof ChardataContext) {
+          const raw = node.getText();
+          // A complete-looking but unsupported header is text, with a diagnostic.
+          for (const match of raw.matchAll(/<\/?[A-Za-z_:][^<>]*/g)) {
+            report({ stage: "lexer", message: "Incomplete or invalid tag header", position: node.start.start + match.index! });
+          }
+          const value = processor.processSource ? raw : processor.process(raw, data);
+          parent.appendChild(typeof value === "string" ? this.decodeText(value, doc) : value);
+        } else if (node instanceof ElementContext) {
+          const close = pairs.get(i);
+          if (node instanceof CloseElementContext ||
+              ((node instanceof OpenElementContext || node instanceof OpenAbbrElementContext) && close === undefined)) {
+            parent.appendChild(doc.createTextNode(text.slice(node.start.start, node.stop!.stop + 1)));
+            continue;
+          }
+          const header = node as Header;
+          let content: ContentContext | undefined;
+          if (close !== undefined) {
+            content = new ContentContext(parser);
+            content.children = nodes.slice(i + 1, close);
+            content.start = nodes[i + 1] instanceof ElementContext || nodes[i + 1] instanceof ChardataContext
+              ? (nodes[i + 1] as ElementContext | ChardataContext).start : header.stop!;
+            content.stop = (nodes[close] as CloseElementContext).start;
+          }
+          const context: TagContext = {
+            tagName: header.Name().getText(), attributes: this.attributes(header, doc),
+            data, content, parentElement: parent,
+          };
+          const element = this.converterManager.getConverter(context.tagName).convert(context, this.domParser);
+          if (close !== undefined) {
+            if (!context.skipChildren) render(i + 1, close, element);
+            i = close;
+          }
+          parent.appendChild(element);
         }
+        // Unity comments do not produce visible content.
       }
-    } else if (
-      elementContext instanceof PairedAbbrElementContext ||
-      elementContext instanceof SelfClosingAbbrElementContext
-    ) {
-      const name = elementContext.Name(0).getText();
-      const value = this.extractAttributeValue(elementContext.attributeValue());
-      attributes[name] = value;
-    } else {
-      return attributes;
-    }
-
-    return attributes;
+    };
+    render(0, nodes.length, root);
+    return root;
   }
 
-  /**
-   * 提取属性值
-   */
-  private extractAttributeValue(
-    attrValueContext: AttributeValueContext
-  ): string | number {
-    if (!attrValueContext) {
-      return ""; // 没有值的属性，返回空字符串
-    }
-
-    const text = attrValueContext.getText();
-
-    // 如果是字符串，去掉引号
-    if (text.startsWith('"') && text.endsWith('"')) {
-      return text.slice(1, -1);
-    }
-
-    if (text.startsWith("'") && text.endsWith("'")) {
-      return text.slice(1, -1);
-    }
-
-    // 如果是十六进制颜色
-    if (text.startsWith("#")) {
-      return text;
-    }
-
-    // 部分情况下以+-开头的数字有特殊用途，需要保持原样
-    // 如<size=+2>text content</size>表示相对于基准值增加2px的字体大小
-    
-    // // 如果是数字，转换为数字类型
-    // const numberValue = Number(text);
-    // if (!isNaN(numberValue)) {
-    //   return numberValue;
-    // }
-
-    // 否则返回原始文本
-    return text;
+  private pairHeaders(nodes: ParseTree[], report: (diagnostic: ParseDiagnostic) => void): Map<number, number> {
+    const pairs = new Map<number, number>();
+    const stack: Array<{ name: string; index: number; position: number }> = [];
+    const unmatched = (position: number, name: string) =>
+      report({ stage: "pairing", position, message: `Unmatched tag: ${name}` });
+    nodes.forEach((node, index) => {
+      if (node instanceof OpenElementContext || node instanceof OpenAbbrElementContext) {
+        stack.push({ name: node.Name().getText().toLowerCase(), index, position: node.start.start });
+      } else if (node instanceof CloseElementContext) {
+        const name = node.Name().getText().toLowerCase();
+        let match = stack.length - 1;
+        while (match >= 0 && stack[match].name !== name) match--;
+        if (match < 0) { unmatched(node.start.start, `/${name}`); return; }
+        while (stack.length - 1 > match) {
+          const abandoned = stack.pop()!;
+          unmatched(abandoned.position, abandoned.name);
+        }
+        pairs.set(stack.pop()!.index, index);
+      }
+    });
+    for (const open of stack) unmatched(open.position, open.name);
+    return pairs;
   }
 
-  /**
-   * 创建DOM元素
-   */
-  private createElement(tagName: string): Element {
-    const doc = this.domParser.parseFromString(
-      `<${tagName}></${tagName}>`,
-      "text/html"
-    );
-    return doc.body.firstElementChild as Element;
+  private attributes(header: Header, doc: Document): Record<string, string | number> {
+    if (header instanceof OpenAbbrElementContext || header instanceof SelfClosingAbbrElementContext) {
+      return { [header.Name().getText()]: this.attributeValue(header.attributeValue(), doc) };
+    }
+    return Object.fromEntries(header.attribute_list().map(attribute =>
+      [attribute.Name().getText(), this.attributeValue(attribute.attributeValue(), doc)]));
   }
 
-  private createDecodedTextNode(escapedString: string) {
-    const textarea = document.createElement('textarea')
-    textarea.innerHTML = escapedString;
-    const decodedString = textarea.value;
-    return document.createTextNode(decodedString);
+  private attributeValue(context: AttributeValueContext, doc: Document): string {
+    const text = context.getText();
+    return text.startsWith('"') || text.startsWith("'") ? this.decodeText(text.slice(1, -1), doc).data : text;
+  }
+
+  private decodeText(text: string, doc: Document): Text {
+    const textarea = doc.createElement("textarea");
+    // Escape literal '<' before entity decoding, including '</textarea>'.
+    textarea.innerHTML = text.replaceAll("<", "&lt;");
+    return doc.createTextNode(textarea.value);
   }
 }

@@ -1,5 +1,5 @@
 import { ContentContext } from "../grammar/UnityRichTextParser";
-import interpolation, { InterpolationProcessor } from "../interpolation";
+import type { InterpolationProcessor } from "../interpolation";
 
 export interface ParseOptions {
   /**
@@ -16,6 +16,17 @@ export interface ParseOptions {
    * DOM解析器实例
    */
   domParser?: DOMParser;
+
+  /** Implicit void tags to normalize. Replaces the default list. */
+  selfClosingTags?: readonly string[];
+  /** Positions refer to the indicated stage's input. */
+  onDiagnostic?: (diagnostic: ParseDiagnostic) => void;
+}
+
+export interface ParseDiagnostic {
+  stage: 'interpolation' | 'lexer' | 'parser' | 'pairing';
+  message: string;
+  position: number;
 }
 
 export interface TagContext {
